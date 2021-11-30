@@ -1,0 +1,34 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: webserver
+spec:
+  hosts:
+  - webserver
+  http:
+  - name: canary
+    match:
+    - uri:
+        exact: "/hostname"
+    - headers:
+        x-canary:
+          exact: "true"
+    route:
+    - destination:
+        host: webserver
+        subset: v11
+    fault:
+      abort:
+        percentage:
+          value: 20
+        httpStatus: 555
+  - name: default
+    route:
+    - destination:
+        host: webserver
+        subset: v10
+    fault:
+      delay:
+        percentage:
+          value: 20
+        fixedDelay: 5s

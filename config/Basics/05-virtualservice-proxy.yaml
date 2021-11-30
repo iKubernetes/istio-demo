@@ -1,0 +1,14 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: proxy
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - istio-system/default-gateway
+  http:
+  - name: default
+    route:
+    - destination:
+        host: proxy

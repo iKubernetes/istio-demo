@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: webserver
+spec:
+  host: webserver
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+  subsets:
+  - name: v10
+    labels:
+      version: v1.0
+  - name: v11
+    labels:
+      version: v1.1
+    trafficPolicy:
+      loadBalancer:
+        simple: RANDOM

@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: webserver
+spec:
+  hosts:
+  - webserver
+  http:
+  - name: canary
+    match:
+    - uri:
+        exact: "/hostname"
+    - headers:
+        x-canary:
+          exact: "true"
+    route:
+    - destination:
+        host: webserverv11
+  - name: default
+    route:
+    - destination:
+        host: webserverv10

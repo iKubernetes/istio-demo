@@ -1,0 +1,33 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: webserver
+spec:
+  host: webserver
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30ms
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+      http:
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 2m
+      baseEjectionTime: 1m
+  subsets:
+  - name: v10
+    labels:
+      version: v1.0
+  - name: v11
+    labels:
+      version: v1.1
+    trafficPolicy:
+      loadBalancer:
+        simple: RANDOM

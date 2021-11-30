@@ -1,0 +1,169 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxy
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      containers:
+        - env:
+          - name: PROXYURL
+            value: http://webserver:8080
+          image: ikubernetes/proxy:v0.1.1
+          imagePullPolicy: IfNotPresent
+          name: proxy
+          ports:
+            - containerPort: 8080
+              name: web
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 50m
+            requests:
+              cpu: 50m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: webserver
+    version: v1.0
+  name: webserverv10
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: webserver
+      version: v1.0
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: webserver
+        version: v1.0
+    spec:
+      affinity: {}
+      containers:
+      - image: ikubernetes/demoapp:v1.0
+        imagePullPolicy: IfNotPresent
+        name: demoapp
+        env:
+        - name: "PORT"
+          value: "8080"
+        ports:
+        - containerPort: 8080
+          name: web
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 50m
+          requests:
+            cpu: 50m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: webserver
+    version: v1.1
+  name: webserverv11
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webserver
+      version: v1.1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: webserver
+        version: v1.1
+    spec:
+      containers:
+      - image: ikubernetes/demoapp:v1.1
+        imagePullPolicy: IfNotPresent
+        name: demoapp
+        env:
+        - name: "PORT"
+          value: "8080"
+        ports:
+        - containerPort: 8080
+          name: web
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 50m
+          requests:
+            cpu: 50m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy
+spec:
+  ports:
+    - name: web
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: proxy
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver
+spec:
+  ports:
+    - name: http-web
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: webserver
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserverv10
+spec:
+  ports:
+    - name: http-web
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: webserver
+    version: v1.0
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserverv11
+spec:
+  ports:
+    - name: http-web
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: webserver
+    version: v1.1
